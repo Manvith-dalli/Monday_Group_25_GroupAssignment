@@ -46,7 +46,20 @@ private Map<Product, Double> adjustedPrices = new HashMap<>();
 
     }
             
+     // Getters for price maps
+public Map<Product, Double> getOriginalPrices() {
+    return originalPrices;
+}
 
+public Map<Product, Double> getAdjustedPrices() {
+    return adjustedPrices;
+}
+
+// Method to update price maps
+public void updatePriceMaps(Map<Product, Double> original, Map<Product, Double> adjusted) {
+    this.originalPrices = new HashMap<>(original);
+    this.adjustedPrices = new HashMap<>(adjusted);
+}
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -168,10 +181,15 @@ private Map<Product, Double> adjustedPrices = new HashMap<>();
 
     private void btnAdjustPriceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAdjustPriceActionPerformed
         // TODO add your handling code here:
-        PriceAdjustmentJPanel atpjp = new PriceAdjustmentJPanel(workArea,supplier);
-        workArea.add("AdjustTargetPriceJPanel",atpjp);
-        CardLayout layout = (CardLayout) workArea.getLayout();
-        layout.next(workArea);
+        if (originalPrices.isEmpty()) {
+        initializePrices();
+    }
+    
+    // Create PriceAdjustmentJPanel and pass the price maps
+    PriceAdjustmentJPanel atpjp = new PriceAdjustmentJPanel(workArea, supplier, originalPrices, adjustedPrices);
+    workArea.add("AdjustTargetPriceJPanel", atpjp);
+    CardLayout layout = (CardLayout) workArea.getLayout();
+    layout.next(workArea);
     }//GEN-LAST:event_btnAdjustPriceActionPerformed
 
     private void btnLogOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogOutActionPerformed
@@ -195,18 +213,38 @@ mainWorkArea.remove(this);
         // TODO add your handling code here:
       System.out.println("Final Report button clicked");
     
-    // Initialize the originalPrices and adjustedPrices maps
-    initializePrices();
-    
     try {
-        FinalReportJPanel finalReportJPanel = new FinalReportJPanel(workArea, supplier, originalPrices, adjustedPrices);
+        // Create FinalReportJPanel with the current price maps
+        FinalReportJPanel finalReportJPanel = new FinalReportJPanel(
+            workArea, supplier, originalPrices, adjustedPrices);
+        
+        // Debug print the prices
+        for (Product p : supplier.getProductCatalog().getProductList()) {
+            System.out.println("Sending to Final Report - Product: " + p.getName() + 
+                             " Original: " + originalPrices.get(p) + 
+                             " Adjusted: " + adjustedPrices.get(p));
+        }
+        
         workArea.add(finalReportJPanel, "FinalReportJPanel");
         CardLayout layout = (CardLayout) workArea.getLayout();
         layout.show(workArea, "FinalReportJPanel");
+        
     } catch (Exception e) {
         System.out.println("Error showing Final Report panel: " + e.getMessage());
         e.printStackTrace();
     }
+}
+
+// Helper method to find PriceAdjustmentPanel
+private PriceAdjustmentJPanel findPriceAdjustmentPanel() {
+    Component[] components = workArea.getComponents();
+    for (Component comp : components) {
+        if (comp instanceof PriceAdjustmentJPanel) {
+            return (PriceAdjustmentJPanel) comp;
+        }
+    }
+    return null;
+
 }
 
 private void initializePrices() {

@@ -5,6 +5,7 @@
 package ui;
 
 import java.awt.CardLayout;
+import java.awt.Component;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JOptionPane;
@@ -16,7 +17,7 @@ import model.Supplier.Supplier;
 
 /**
  *
- * @author 
+ * @author rakshakmoorthy
  */
 public class PriceAdjustmentJPanel extends javax.swing.JPanel {
     JPanel workArea;
@@ -33,15 +34,18 @@ public class PriceAdjustmentJPanel extends javax.swing.JPanel {
         
     }
 
-    PriceAdjustmentJPanel(JPanel workArea, Supplier supplier) {
+    PriceAdjustmentJPanel(JPanel workArea, Supplier supplier, 
+                         Map<Product, Double> originalPrices, 
+                         Map<Product, Double> adjustedPrices) {
         initComponents();
         this.workArea = workArea;
         this.supplier = supplier;
-        this.product  = product;
-        initializePrices(); // Initialize price maps
-        setupTable(); // Setup table structure
+        this.product = product;
+        this.originalPrices = originalPrices;
+        this.adjustedPrices = adjustedPrices;
+        
+        setupTable();
         populateTable();
-      
     }
     public Map<Product, Double> getAdjustedPrices() {
     return adjustedPrices;
@@ -340,7 +344,16 @@ public class PriceAdjustmentJPanel extends javax.swing.JPanel {
     private javax.swing.JTextField txtRaise;
     private javax.swing.JTextField txtShowPrice;
     // End of variables declaration//GEN-END:variables
-
+   // In PriceAdjustmentJPanel after any price adjustment:
+private void updateParentPanel() {
+    Component[] components = workArea.getComponents();
+    for (Component comp : components) {
+        if (comp instanceof SupplierWorkAreaJPanel) {
+            ((SupplierWorkAreaJPanel) comp).updatePriceMaps(originalPrices, adjustedPrices);
+            break;
+        }
+    }
+}
    private void populateTable() {
         DefaultTableModel model = (DefaultTableModel) PriceTable.getModel();
         model.setRowCount(0); // Clear existing rows

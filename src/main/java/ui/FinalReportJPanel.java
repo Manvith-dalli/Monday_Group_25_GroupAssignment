@@ -16,7 +16,7 @@ import model.Supplier.Supplier;
 
 /**
  *
- * @author manvith
+ * @author raskhakmoorthy
  */
 public class FinalReportJPanel extends javax.swing.JPanel {
     private JPanel workArea;
