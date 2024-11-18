@@ -16,7 +16,7 @@ import model.Supplier.Supplier;
 
 /**
  *
- * @author raksha
+ * @author 
  */
 public class PriceAdjustmentJPanel extends javax.swing.JPanel {
     JPanel workArea;
@@ -43,6 +43,9 @@ public class PriceAdjustmentJPanel extends javax.swing.JPanel {
         populateTable();
       
     }
+    public Map<Product, Double> getAdjustedPrices() {
+    return adjustedPrices;
+}
     private void initializePrices() {
         if (supplier != null && supplier.getProductCatalog() != null) {
             for (Product product : supplier.getProductCatalog().getProductList()) {
@@ -216,17 +219,22 @@ public class PriceAdjustmentJPanel extends javax.swing.JPanel {
 
     private void btmGoToResultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btmGoToResultActionPerformed
         // TODO add your handling code here:
-        System.out.println("Original Prices: " + originalPrices.size());
-        System.out.println("Adjusted Prices: " + adjustedPrices.size());
-     SimulationPanel simulationPanel = new SimulationPanel(workArea, supplier, originalPrices, adjustedPrices);
-        workArea.add(simulationPanel, "SimulationPanel");
-        CardLayout layout = (CardLayout) workArea.getLayout();
-        layout.show(workArea, "SimulationPanel");
+        System.out.println("Sending price data to SimulationPanel:");
+    for (Map.Entry<Product, Double> entry : originalPrices.entrySet()) {
+        System.out.println("Product: " + entry.getKey().getName() + 
+                          " Original: " + entry.getValue() + 
+                          " Adjusted: " + adjustedPrices.get(entry.getKey()));
+    }
+    
+    SimulationPanel simulationPanel = new SimulationPanel(workArea, supplier, originalPrices, adjustedPrices);
+    workArea.add(simulationPanel, "SimulationPanel");
+    CardLayout layout = (CardLayout) workArea.getLayout();
+    layout.show(workArea, "SimulationPanel");
     }//GEN-LAST:event_btmGoToResultActionPerformed
 
     private void btmRaiseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btmRaiseActionPerformed
         // TODO add your handling code here:
-         int selectedRow = PriceTable.getSelectedRow();
+        int selectedRow = PriceTable.getSelectedRow();
     if (selectedRow != -1) {
         try {
             double raiseValue = Double.parseDouble(txtRaise.getText());
@@ -257,11 +265,12 @@ public class PriceAdjustmentJPanel extends javax.swing.JPanel {
     } else {
         JOptionPane.showMessageDialog(this, "Please select a product");
     }
+
     }//GEN-LAST:event_btmRaiseActionPerformed
 
     private void btmLowerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btmLowerActionPerformed
         // TODO add your handling code here:
-        int selectedRow = PriceTable.getSelectedRow();
+         int selectedRow = PriceTable.getSelectedRow();
     if (selectedRow != -1) {
         try {
             double lowerValue = Double.parseDouble(txtLower.getText());

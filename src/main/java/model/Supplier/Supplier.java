@@ -18,13 +18,14 @@ import model.ProductManagement.ProductsReport;
 public class Supplier {
     String name;
     ProductCatalog productcatalog;
-   ProductsReport productsreport;
+    ProductsReport productsreport;
+    
     public Supplier(String n){
         name = n;
         productcatalog = new ProductCatalog("software");
+        productsreport = new ProductsReport();
         
-    }
-    
+    }    
     public ProductsReport prepareProductsReport(){
         
         productsreport = productcatalog.generatProductPerformanceReport();
@@ -41,7 +42,7 @@ public class Supplier {
     public String getName(){
         return name;
     }
-        public ProductCatalog getProductCatalog(){
+    public ProductCatalog getProductCatalog(){
         return productcatalog;
     }
     //add supplier product ..
@@ -50,6 +51,6 @@ public class Supplier {
     @Override
    public String toString(){
        return name;
-       
    }
+   
 }

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.table.DefaultTableModel;
+import model.OrderManagement.OrderItem;
 import model.ProductManagement.Product;
 import model.Supplier.Supplier;
 
@@ -20,7 +21,7 @@ import model.Supplier.Supplier;
 
 /**
  *
- * @author rakshakmoorthy
+ * @author purvang
  */
 public class ProfitMaximizationJPanel extends javax.swing.JPanel {
     JPanel workArea;
@@ -49,7 +50,7 @@ public class ProfitMaximizationJPanel extends javax.swing.JPanel {
     private double margins;
     private double profitability;
 
-    // 构造器
+    
     public ProfitMaximizationResult(String productName, double currentPrice, double sales, double margins, double profitability) {
         this.productName = productName;
         this.currentPrice = currentPrice;
@@ -190,24 +191,22 @@ public class ProfitMaximizationJPanel extends javax.swing.JPanel {
     private ArrayList<ProfitMaximizationResult> calculateProfitMaximization() {
     ArrayList<ProfitMaximizationResult> results = new ArrayList<>();
     
-    // 这只是一个示例逻辑。您应该根据您的要求替换它为实际的利润最大化计算逻辑。
-    
-    // 假设我们有一些产品及其价格和销售量
+   
     String[] products = {"A", "B", "C"};
     double[] prices = {100.0, 150.0, 200.0};
     int[] sales = {120, 80, 60};
 
-    // 仅供演示的虚拟计算
+   
     for (int i = 0; i < products.length; i++) {
-        double profitMargin = prices[i] * sales[i] * 0.2; // 虚构的利润率计算
-        double profitability = profitMargin / (prices[i] * sales[i]); // 虚构的盈利能力计算
+        double profitMargin = prices[i] * sales[i] * 0.2; 
+        double profitability = profitMargin / (prices[i] * sales[i]); 
         results.add(new ProfitMaximizationResult(products[i], prices[i], sales[i], profitMargin, profitability));
     }
 
     return results;
 }
 
-// ...类的其余代码...
+
 
 
 
@@ -226,23 +225,35 @@ private void populateInitialTable() {
     
     if (supplier != null && supplier.getProductCatalog() != null) {
         for (Product product : supplier.getProductCatalog().getProductList()) {
-            double currentPrice = product.getTargetPrice();
-            int salesVolume = product.getSalesVolume();
-            double costPrice = product.getFloorPrice();
-            
-            // Calculate metrics
-            double sales = currentPrice * salesVolume;
-            double margins = (currentPrice - costPrice) * salesVolume;
-            double profitability = (margins / sales) * 100;
-            
-            Object[] row = new Object[5];
-            row[0] = product.getName();// Product
-            row[1] = String.format("$%.2f", currentPrice);  // Current Price
-            row[2] = String.format("$%.2f", sales);  // Sales
-            row[3] = String.format("$%.2f", margins);  // Margins
-            row[4] = String.format("%.2f%%", profitability);  // Profitability
-            
-            model.addRow(row);
+            try {
+                // Get base values
+                double currentPrice = product.getTargetPrice();
+                int salesVolume = product.getSalesVolume();
+                double costPrice = product.getFloorPrice();
+                
+                // Calculate Sales (Revenue)
+                double totalRevenue = currentPrice * salesVolume;
+                
+                // Calculate Margins (Profit)
+                double totalCost = costPrice * salesVolume;
+                double margins = totalRevenue - totalCost;
+                
+                // Calculate Profitability (ROI)
+                double profitability = (totalRevenue > 0) ? (margins / totalRevenue) * 100 : 0;
+                
+                Object[] row = new Object[5];
+                row[0] = product.getName();
+                row[1] = String.format("$%.2f", currentPrice);
+                row[2] = String.format("$%.2f", totalRevenue);
+                row[3] = String.format("$%.2f", margins);
+                row[4] = String.format("%.2f%%", profitability);
+                
+                model.addRow(row);
+                
+            } catch (Exception e) {
+                System.out.println("Error processing product: " + product.getName());
+                e.printStackTrace();
+            }
         }
     }
     
@@ -253,9 +264,9 @@ private void populateInitialTable() {
     // Set column headers
     String[] columnNames = {
         "Product",
-        "Current Price",
-        "Sales",
-        "Margins",
+        "Optimal Price",
+        "Projected Revenue",
+        "Projected Margins",
         "Profitability"
     };
     
@@ -267,68 +278,95 @@ private void populateInitialTable() {
     // Adjust column widths for both tables
     for (javax.swing.JTable table : new javax.swing.JTable[]{ProfitMaxTable, MaxTable}) {
         table.getColumnModel().getColumn(0).setPreferredWidth(150);   // Product
-        table.getColumnModel().getColumn(1).setPreferredWidth(100);  // Current Price
-        table.getColumnModel().getColumn(2).setPreferredWidth(100);  // Sales
-        table.getColumnModel().getColumn(3).setPreferredWidth(100);  // Margins
+        table.getColumnModel().getColumn(1).setPreferredWidth(100);  // Optimal Price
+        table.getColumnModel().getColumn(2).setPreferredWidth(100);  // Projected Revenue
+        table.getColumnModel().getColumn(3).setPreferredWidth(100);  // Projected Margins
         table.getColumnModel().getColumn(4).setPreferredWidth(100);  // Profitability
     }
 }
 
 
+
 // Helper method to calculate maximum profit scenario
 private void calculateAndDisplayMaxProfit() {
-        DefaultTableModel maxModel = (DefaultTableModel) MaxTable.getModel();
-        maxModel.setRowCount(0); // Clear the max table
+    DefaultTableModel maxModel = (DefaultTableModel) MaxTable.getModel();
+    maxModel.setRowCount(0);
+    
+    if (supplier != null && supplier.getProductCatalog() != null) {
+        Product bestProduct = null;
+        double maxProfitability = -1;
+        double optimalPrice = 0;
+        double maxRevenue = 0;
+        double maxMargins = 0;
         
-        if (supplier != null && supplier.getProductCatalog() != null) {
-            Product bestProduct = null;
-            double maxProfitability = -1;
-            double bestPrice = 0;
-            double bestSales = 0;
-            double bestMargins = 0;
-            
-            // Find the product with highest profitability
-            for (Product product : supplier.getProductCatalog().getProductList()) {
-                // Get price ranges
+        for (Product product : supplier.getProductCatalog().getProductList()) {
+            try {
                 int floorPrice = product.getFloorPrice();
                 int ceilingPrice = product.getCeilingPrice();
-                int currentPrice = product.getTargetPrice();
-                int salesVolume = product.getSalesVolume();
+                int currentSalesVolume = product.getSalesVolume();
                 
-                // Calculate metrics
-                double sales = currentPrice * salesVolume;
-                double margins = (currentPrice - floorPrice) * salesVolume;
-                double profitability = (sales > 0) ? (margins / sales) * 100 : 0;
+                // Calculate optimal price point
+                double priceRange = ceilingPrice - floorPrice;
+                double[] testPrices = {
+                    floorPrice + (priceRange * 0.2),  // 20% above floor
+                    floorPrice + (priceRange * 0.4),  // 40% above floor
+                    floorPrice + (priceRange * 0.6),  // 60% above floor
+                    floorPrice + (priceRange * 0.8),  // 80% above floor
+                    product.getTargetPrice()          // Current target price
+                };
                 
-                if (profitability > maxProfitability) {
-                    maxProfitability = profitability;
-                    bestProduct = product;
-                    bestPrice = currentPrice;
-                    bestSales = sales;
-                    bestMargins = margins;
+                // Test each price point
+                for (double testPrice : testPrices) {
+                    // Calculate projected sales volume using price elasticity
+                    double priceRatio = testPrice / product.getTargetPrice();
+                    double elasticity = -1.5; // Price elasticity coefficient
+                    double projectedVolume = currentSalesVolume * Math.pow(priceRatio, elasticity);
+                    
+                    // Calculate metrics for this price point
+                    double revenue = testPrice * projectedVolume;
+                    double cost = floorPrice * projectedVolume;
+                    double margins = revenue - cost;
+                    double profitability = (revenue > 0) ? (margins / revenue) * 100 : 0;
+                    
+                    // Check if this is the best price point
+                    if (profitability > maxProfitability) {
+                        maxProfitability = profitability;
+                        bestProduct = product;
+                        optimalPrice = testPrice;
+                        maxRevenue = revenue;
+                        maxMargins = margins;
+                    }
                 }
-            }
-            
-            // Display the best performing product
-            if (bestProduct != null) {
-                Object[] row = new Object[5];
-                row[0] = bestProduct.toString();
-                row[1] = String.format("$%.2f", bestPrice);
-                row[2] = String.format("$%.2f", bestSales);
-                row[3] = String.format("$%.2f", bestMargins);
-                row[4] = String.format("%.2f%%", maxProfitability);
-                maxModel.addRow(row);
                 
-                // Optional: Show a message with the results
-                String message = String.format("Most profitable product found:\n" +
-                        "Product: %s\n" +
-                        "Profitability: %.2f%%\n" +
-                        "Sales: $%.2f\n" +
-                        "Margins: $%.2f",
-                        bestProduct.toString(), maxProfitability, bestSales, bestMargins);
-                JOptionPane.showMessageDialog(this, message, "Profit Maximization Results", 
-                        JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                System.out.println("Error calculating optimal price for product: " + product.getName());
+                e.printStackTrace();
             }
         }
+        
+        // Display the optimal result
+        if (bestProduct != null) {
+            Object[] row = new Object[5];
+            row[0] = bestProduct.getName();
+            row[1] = String.format("$%.2f", optimalPrice);
+            row[2] = String.format("$%.2f", maxRevenue);
+            row[3] = String.format("$%.2f", maxMargins);
+            row[4] = String.format("%.2f%%", maxProfitability);
+            maxModel.addRow(row);
+            
+            // Show results dialog
+            String message = String.format("""
+                Optimal Price Point Found:
+                Product: %s
+                Optimal Price: $%.2f
+                Projected Revenue: $%.2f
+                Projected Margins: $%.2f
+                Profitability: %.2f%%""",
+                bestProduct.getName(), optimalPrice, maxRevenue, maxMargins, maxProfitability);
+                
+            JOptionPane.showMessageDialog(this, message, "Profit Maximization Results", 
+                JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
 }
 }

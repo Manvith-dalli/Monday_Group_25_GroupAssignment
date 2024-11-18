@@ -144,24 +144,79 @@ public class PricePerformanceJPanel extends javax.swing.JPanel {
     // End of variables declaration//GEN-END:variables
     
     private void populateTable() {
-        DefaultTableModel model = (DefaultTableModel) tblPricePerformance.getModel();
-        model.setRowCount(0);
+    System.out.println("Starting to populate price performance table");
+    DefaultTableModel model = (DefaultTableModel) tblPricePerformance.getModel();
+    model.setRowCount(0);
 
-        if (supplier != null && supplier.getProductCatalog() != null) {
+    if (supplier != null && supplier.getProductCatalog() != null) {
+        System.out.println("Number of products: " + supplier.getProductCatalog().getProductList().size());
+        
         for (Product p : supplier.getProductCatalog().getProductList()) {
             if (p != null) {
-                ProductSummary ps = new ProductSummary(p);
-                Object[] row = new Object[6];
-                row[0] = p.getName();// Assuming there's a getName() method
-                row[1] = p.getTargetPrice();
-                row[2] = p.getFloorPrice();
-                row[3] = p.getCeilingPrice();
-                row[4] = p.getSalesVolume();
-                row[5] = ps.getSalesRevenues();
-                
-                model.addRow(row);
+                try {
+                    ProductSummary ps = new ProductSummary(p);
+                    Object[] row = new Object[6];
+                    
+                    // Product Name
+                    row[0] = p.getName();
+                    
+                    // Price Information (formatted as currency)
+                    row[1] = String.format("$%d", p.getTargetPrice());
+                    row[2] = String.format("$%d", p.getFloorPrice());
+                    row[3] = String.format("$%d", p.getCeilingPrice());
+                    
+                    // Calculate Sales Volume (total quantity sold)
+                    int totalSalesVolume = 0;
+                    double totalRevenue = 0.0;
+                    
+                    for (OrderItem item : p.getOrderitems()) {
+                        totalSalesVolume += item.getQuantity();
+                        totalRevenue += (item.getQuantity() * item.getActualPrice());
+                    }
+                    
+                    // Sales Volume
+                    row[4] = totalSalesVolume;
+                    
+                    // Sales Revenue (formatted as currency)
+                    row[5] = String.format("$%.2f", totalRevenue);
+                    
+                    model.addRow(row);
+                    System.out.println("Added row for product: " + p.getName());
+                    
+                } catch (Exception e) {
+                    System.out.println("Error processing product: " + p.getName());
+                    e.printStackTrace();
+                }
             }
         }
-    }
+        
+        // Set column headers
+        String[] columnNames = {
+            "Product Name",
+            "Target Price",
+            "Floor Price",
+            "Ceiling Price",
+            "Sales Volume",
+            "Sales Revenue"
+        };
+        
+        for (int i = 0; i < columnNames.length; i++) {
+            tblPricePerformance.getColumnModel().getColumn(i).setHeaderValue(columnNames[i]);
         }
+        
+        // Set column widths
+        tblPricePerformance.getColumnModel().getColumn(0).setPreferredWidth(150);  // Product Name
+        tblPricePerformance.getColumnModel().getColumn(1).setPreferredWidth(100);  // Target Price
+        tblPricePerformance.getColumnModel().getColumn(2).setPreferredWidth(100);  // Floor Price
+        tblPricePerformance.getColumnModel().getColumn(3).setPreferredWidth(100);  // Ceiling Price
+        tblPricePerformance.getColumnModel().getColumn(4).setPreferredWidth(100);  // Sales Volume
+        tblPricePerformance.getColumnModel().getColumn(5).setPreferredWidth(150);  // Sales Revenue
+    } else {
+        System.out.println("Supplier or catalog is null");
+    }
+
+    // Refresh table display
+    tblPricePerformance.revalidate();
+    tblPricePerformance.repaint();
+}
     }

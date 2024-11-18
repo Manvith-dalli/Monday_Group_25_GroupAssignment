@@ -33,6 +33,10 @@ public class Product {
         targetPrice = tp;
         orderitems = new ArrayList();
     }
+
+    public ArrayList<OrderItem> getOrderitems() {
+        return orderitems != null ? orderitems : new ArrayList<>();
+    }
         public Product updateProduct(int fp, int cp, int tp) {
         floorPrice = fp;
         ceilingPrice = cp;
@@ -41,6 +45,9 @@ public class Product {
     }
     public int getTargetPrice() {return targetPrice;}
     public void addOrderItem(OrderItem oi){     
+        if (orderitems == null) {
+            orderitems = new ArrayList<>();
+        }
         orderitems.add(oi);
     }
     //Number of item sales above target 
@@ -88,6 +95,7 @@ public class Product {
     public void setName(String n){
         name = n;
     }
+    
     @Override
     public String toString(){
         return name;
@@ -98,5 +106,9 @@ public class Product {
     public int getCeilingPrice(){
         return ceilingPrice;
     }
+    public String getName() {
+        return name;
+    }
+    
 
 }

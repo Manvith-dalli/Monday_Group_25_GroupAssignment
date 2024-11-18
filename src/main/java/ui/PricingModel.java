@@ -6,12 +6,19 @@
 package ui;
 
 import java.awt.CardLayout;
+import java.awt.Dimension;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import model.Business.Business;
 import model.Business.ConfigureABusiness;
+import model.CustomerManagement.CustomerProfile;
+import model.OrderManagement.MasterOrderList;
+import model.OrderManagement.Order;
+import model.OrderManagement.OrderItem;
+import model.ProductManagement.Product;
+import model.Supplier.Supplier;
 import model.Supplier.SupplierDirectory;
 
 /**
@@ -20,7 +27,11 @@ import model.Supplier.SupplierDirectory;
  */
 public class PricingModel {
 
-   public static void main(String[] args) {
+  /**
+   * @param args the command line arguments
+   */
+  
+    public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
                 createAndShowGUI();

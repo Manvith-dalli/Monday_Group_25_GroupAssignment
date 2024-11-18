@@ -6,32 +6,38 @@ package ui;
 
 import java.awt.CardLayout;
 import java.awt.Dimension;
+import java.util.Map;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
+import model.OrderManagement.OrderItem;
 import model.ProductManagement.Product;
 import model.Supplier.Supplier;
 
 /**
  *
- * @author rakshakmoorthy
+ * @author manvith
  */
 public class FinalReportJPanel extends javax.swing.JPanel {
     private JPanel workArea;
     private Supplier supplier;
+    private Map<Product, Double> originalPrices;
+    private Map<Product, Double> adjustedPrices;
     /**
      * Creates new form FinalReportJPanel
      */
-    public FinalReportJPanel(JPanel workArea, Supplier supplier) {
-        System.out.println("Initializing FinalReportJPanel");
+    public FinalReportJPanel(JPanel workArea, Supplier supplier, Map<Product, Double> originalPrices, Map<Product, Double> adjustedPrices) {
+    System.out.println("Initializing FinalReportJPanel");
     initComponents();
     this.workArea = workArea;
     this.supplier = supplier;
+    this.originalPrices = originalPrices;
+    this.adjustedPrices = adjustedPrices;
     System.out.println("Supplier in FinalReportJPanel: " + (supplier != null ? supplier.getName() : "null"));
     initializePanel();
     populateTable();
     System.out.println("FinalReportJPanel initialization complete");
-    }
+}
     private void initializePanel() {
         // Set preferred size to match other panels
         setPreferredSize(new Dimension(900, 800));
@@ -51,46 +57,73 @@ public class FinalReportJPanel extends javax.swing.JPanel {
     }
     private void populateTable() {
     DefaultTableModel model = (DefaultTableModel) tblReport.getModel();
-    model.setRowCount(0); // Clear existing data
+    model.setRowCount(0); // Clear existing rows
 
     if (supplier != null && supplier.getProductCatalog() != null) {
+        System.out.println("Processing products for supplier: " + supplier.getName());
+        
         for (Product product : supplier.getProductCatalog().getProductList()) {
             Object[] row = new Object[7];
-            
+
             try {
-                // Basic information
-                row[0] = product.toString();
-                
-                // Format prices as integers or doubles based on their type
-                int targetPrice = product.getTargetPrice();
-                row[1] = String.format("$%d", targetPrice);  // Changed from %.2f to %d
-                
-                // Previous and current prices
-                row[2] = String.format("$%d", targetPrice);  // Changed from %.2f to %d
-                row[3] = String.format("$%d", targetPrice);  // Changed from %.2f to %d
-                
-                // Sales volume - assuming it returns an integer
-                row[4] = product.getSalesVolume();
-                
-                // Calculate frequencies
+                // Debug prints
+                System.out.println("Processing product: " + product.getName());
+                System.out.println("Original price from map: " + originalPrices.get(product));
+                System.out.println("Adjusted price from map: " + adjustedPrices.get(product));
+
+                // Get price values - Use the maps directly for original and adjusted prices
+                double targetPrice = product.getTargetPrice();
+                Double originalPrice = originalPrices.get(product);
+                Double adjustedPrice = adjustedPrices.get(product);
+
+                if (originalPrice == null || adjustedPrice == null) {
+                    System.out.println("Warning: Missing price data for product: " + product.getName());
+                    // Use target price as fallback
+                    originalPrice = (double) targetPrice;
+                    adjustedPrice = (double) targetPrice;
+                }
+
+                // Calculate sales metrics
+                int totalOrders = 0;
                 int belowTarget = 0;
                 int aboveTarget = 0;
-                
-                // Calculate frequencies if you have the data
-                // You'll need to implement this based on your data structure
-                
+                int salesVolume = 0;
+
+                // Get all orders for this product
+                for (OrderItem item : product.getOrderitems()) {
+                    if (item.getQuantity() > 0) {
+                        totalOrders++;
+                        salesVolume += item.getQuantity();
+
+                        double actualPrice = item.getActualPrice();
+                        if (actualPrice < targetPrice) {
+                            belowTarget++;
+                        } else if (actualPrice > targetPrice) {
+                            aboveTarget++;
+                        }
+                    }
+                }
+
+                // Populate row data with proper price values
+                row[0] = product.getName();
+                row[1] = String.format("$%.2f", targetPrice);
+                row[2] = String.format("$%.2f", originalPrice); // Original price from map
+                row[3] = String.format("$%.2f", adjustedPrice); // Adjusted price from map
+                row[4] = salesVolume;
                 row[5] = belowTarget;
                 row[6] = aboveTarget;
-                
+
                 model.addRow(row);
                 
             } catch (Exception e) {
-                System.out.println("Error processing product: " + product.toString());
+                System.out.println("Error processing product: " + product.getName());
                 e.printStackTrace();
             }
         }
+    } else {
+        System.out.println("Supplier or catalog is null");
     }
-    
+
     // Refresh the table
     tblReport.revalidate();
     tblReport.repaint();

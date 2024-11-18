@@ -8,7 +8,10 @@ package ui;
 import java.awt.CardLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.util.HashMap;
+import java.util.Map;
 import javax.swing.JPanel;
+import model.ProductManagement.Product;
 import model.Supplier.Supplier;
 
 /**
@@ -19,6 +22,8 @@ public class SupplierWorkAreaJPanel extends javax.swing.JPanel {
 
     JPanel mainWorkArea;
     Supplier supplier;
+    private Map<Product, Double> originalPrices = new HashMap<>();
+private Map<Product, Double> adjustedPrices = new HashMap<>();
 
     
     /**
@@ -188,17 +193,28 @@ mainWorkArea.remove(this);
 
     private void btnFinalReportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFinalReportActionPerformed
         // TODO add your handling code here:
-      System.out.println("Final Report button clicked"); // Debug message
+      System.out.println("Final Report button clicked");
+    
+    // Initialize the originalPrices and adjustedPrices maps
+    initializePrices();
     
     try {
-        FinalReportJPanel finalReport = new FinalReportJPanel(mainWorkArea, supplier);  // Changed workArea to mainWorkArea
-        mainWorkArea.add(finalReport, "FinalReportPanel");  // Changed workArea to mainWorkArea
-        CardLayout layout = (CardLayout) mainWorkArea.getLayout();  // Changed workArea to mainWorkArea
-        layout.show(mainWorkArea, "FinalReportPanel");
-        System.out.println("Final Report panel added and shown");
+        FinalReportJPanel finalReportJPanel = new FinalReportJPanel(workArea, supplier, originalPrices, adjustedPrices);
+        workArea.add(finalReportJPanel, "FinalReportJPanel");
+        CardLayout layout = (CardLayout) workArea.getLayout();
+        layout.show(workArea, "FinalReportJPanel");
     } catch (Exception e) {
         System.out.println("Error showing Final Report panel: " + e.getMessage());
         e.printStackTrace();
+    }
+}
+
+private void initializePrices() {
+    if (supplier != null && supplier.getProductCatalog() != null) {
+        for (Product product : supplier.getProductCatalog().getProductList()) {
+            originalPrices.put(product, (double)product.getTargetPrice());
+            adjustedPrices.put(product, (double)product.getTargetPrice());
+        }
     }
     }//GEN-LAST:event_btnFinalReportActionPerformed
 
